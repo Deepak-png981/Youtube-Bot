@@ -11,7 +11,6 @@ class YouTubeProcessor:
     def get_transcript(self, video_id: str) -> str:
         try:
             transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['en' , 'en-US'])
-            print(f"Transcript: {transcript}")
             return " ".join([t['text'] for t in transcript])
         except Exception as e:
             print("Error in get_transcript: ", e)
