@@ -6,7 +6,6 @@ class ChatBotCLI:
         setup_logging()
         self.logger = logging.getLogger(__name__)
         self.graph = ChatGraph()
-        # self.chat_history = ChatHistory()
     def run(self):
         print("Welcome to SmartChat! (Type 'q' to quit)")
         while True:
