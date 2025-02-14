@@ -1,17 +1,12 @@
 from core.graph import ChatGraph
 from core.utils import setup_logging
 import logging
-# from dotenv import load_dotenv
-# import os
-
-# load_dotenv()
-
 class ChatBotCLI:
     def __init__(self):
         setup_logging()
         self.logger = logging.getLogger(__name__)
         self.graph = ChatGraph()
-    
+        # self.chat_history = ChatHistory()
     def run(self):
         print("Welcome to SmartChat! (Type 'q' to quit)")
         while True:
@@ -29,8 +24,6 @@ class ChatBotCLI:
     
     def _display_result(self, state):
         print("\nAssistant:")
-        print("FINAL STATE:")
-        print(state)
         if state.notes:
             print(state.notes)
         else:
