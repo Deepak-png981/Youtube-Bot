@@ -1,0 +1,9 @@
+langchain
+langgraph 
+openai 
+python-dotenv
+youtube-transcript-api 
+pytube 
+openai-whisper
+langchain_community
+langchain_openai
