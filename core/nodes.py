@@ -22,16 +22,12 @@ class GraphNodes:
             state.youtube_url = match.group(0)
         else:
             state.youtube_url = None
-        print("YOUTUBE URL:")
-        print(state.youtube_url)
         return state
     
     def extract_transcript(self, state: ChatState) -> ChatState:
         video_id = extract_video_id(state.youtube_url)
         state.video_id = video_id
-        print("Video ID: ", video_id)
         state.transcript = self.youtube_processor.get_transcript(video_id)
-        print("Transcript: ", state.transcript)
         return state
     
     def generate_notes(self, state: ChatState) -> ChatState:

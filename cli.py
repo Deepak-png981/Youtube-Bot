@@ -1,10 +1,10 @@
 from core.graph import ChatGraph
 from core.utils import setup_logging
 import logging
-from dotenv import load_dotenv
-import os
+# from dotenv import load_dotenv
+# import os
 
-load_dotenv()
+# load_dotenv()
 
 class ChatBotCLI:
     def __init__(self):
@@ -13,11 +13,11 @@ class ChatBotCLI:
         self.graph = ChatGraph()
     
     def run(self):
-        print("Welcome to SmartChat! (Type 'exit' to quit)")
+        print("Welcome to SmartChat! (Type 'q' to quit)")
         while True:
             try:
                 user_input = input("\nYou: ")
-                if user_input.lower() == 'exit':
+                if user_input.lower() == 'q':
                     break
                 
                 result = self.graph.execute(user_input)
