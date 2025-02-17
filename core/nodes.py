@@ -5,13 +5,7 @@ from .utils import extract_video_id
 import re
 from history.chat_history import ChatHistory
 from core.openAI import OpenAIAPI
-from langchain_core.tools import tool
-
-##tool call
-from pathlib import Path
-import tempfile
-from datetime import datetime
-##
+from processors.tools import export_notes
 
 def route_input(state: ChatState) -> str:
     if "youtube.com" in state.user_input:
@@ -29,6 +23,7 @@ class GraphNodes:
         self.youtube_processor = YouTubeProcessor()
         self.generator = Generator()
         self.chat_history = ChatHistory()
+        self.openai = OpenAIAPI()
     
     def detect_youtube_url(self, state: ChatState) -> ChatState:
         youtube_url_pattern = r'(https?://(?:www\.)?youtube\.com/watch\?v=[\w-]+)'
@@ -55,90 +50,43 @@ class GraphNodes:
         return state
     
     def normal_chat_response(self, state: ChatState) -> ChatState:
+        print("normal_chat_response")
         state.notes = self.generator.generate_response(state.user_input , state.transcript, self.chat_history.get_history())
         self._update_history(state)
         return state
-    
-    @tool
-    def export_notes(self, notes: str, format: str = "txt") -> str:
-        """Export notes to a file
-        Args:
-            notes (str): The notes to export
-            format (str): The format to export the notes in
-            
-        Returns:
-            str: The path to the exported file
-        """
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = self.output_dir / f"notes_{timestamp}.{format}"
+    def should_export(self, state: ChatState):
+        print("Entering should_export with state:", state)
         
-        if format == "txt":
-            filename.write_text(notes)
-        elif format == "md":
-            filename.write_text(notes)
-        elif format == "mdx":
-            filename.write_text(notes)
-        elif format == "pdf":
-            self._export_pdf(notes, filename)
-        else:
-            raise ValueError(f"Unsupported format: {format}")
+        llm_with_tools = self.openai.bind_tools([export_notes])    
+        prompt = state.user_input + "\n\n" + state.notes
+        messages = [{"role": "user", "content": prompt}]
         
-        return str(filename)
-    
-    def _export_pdf(self, notes: str, filename: Path):
-        from fpdf import FPDF  # Requires `fpdf2` package
-        
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.multi_cell(0, 10, notes)
-        pdf.output(str(filename))
-    
-    def export_or_respond(self, state: ChatState) -> ChatState:
-        """
-        Uses the OpenAI LLM to decide whether to export the generated notes
-        (via the bound file-export tool) or to simply return them as chat output.
-        We then attach a messages list to the state so that the tools_condition
-        (which we cannot change) can inspect the last message’s `tool_calls`.
-        """
-        if not state.notes:
-            state.action = "respond"
-            state.messages = [Message(role="assistant", content=state.notes, tool_calls=[])]
-            return state
+        print("Sending messages to LLM:", messages)
+        decision = llm_with_tools.invoke(messages)
+        print("Received decision from LLM:", decision)
+        return {"messages" : decision}
 
-        prompt = (
-            f"The following notes have been generated:\n\n{state.notes}\n\n"
-            "Should these notes be exported as a file (action 'tools') or simply returned "
-            "as a chat response (action 'respond')? Please reply with exactly one word: either "
-            "'tools' or 'respond'. "
-            "Decide based on the user prompt: if the user is requesting to export the notes or "
-            "build a pdf or create a markdown file, then return 'tools'; otherwise return 'respond'. "
-            f"User prompt: {state.user_input}"
-        )
+
+
+        # tool_calls = None
+        # if isinstance(decision, dict):
+        #     tool_calls = decision.get("tool_calls") or decision.get("additional_kwargs", {}).get("tool_calls", [])
+        # elif hasattr(decision, "additional_kwargs"):
+        #     tool_calls = decision.additional_kwargs.get("tool_calls", [])
+
+        # print("Extracted tool_calls:", tool_calls)
+
+        # if tool_calls:
+        #     print("Tool calls found:", tool_calls)
+        #     state.tool = tool_calls[0]
+        #     state.action = "tools"
+        # else:
+        #     print("No tool calls found, setting action to respond")
+        #     state.action = "respond"
         
-        try:
-            llm = OpenAIAPI()
-            decision = llm.get_response(
-                messages=[
-                    {"role": "system", "content": "You are a decision-making assistant."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            print("decision:", decision)
-            if decision not in ("tools", "respond"):
-                decision = "respond"
-            state.action = decision
-        except Exception as e:
-            print(f"LLM decision error: {e}")
-            state.action = "respond"
-        
-        # Attach a messages list so that tools_condition can read the decision.
-        # If the decision is "tools", add a non-empty tool_calls list.
-        if state.action == "tools":
-            tool_call = {"tool": "export_notes", "args": {"notes": state.notes}}
-            message = Message(role="assistant", content=state.notes, tool_calls=[tool_call])
-        else:
-            message = Message(role="assistant", content=state.notes, tool_calls=[])
-        
-        state.messages = [message]
-        return state
+        # print("Exiting should_export with state:", state)
+        # return state
+
+   
+    
+    

@@ -9,3 +9,4 @@ class ChatState(BaseModel):
     notes: Optional[str] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
     action: Optional[str] = None
+    tool: Optional[Dict] = None
