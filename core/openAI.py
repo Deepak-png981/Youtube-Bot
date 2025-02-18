@@ -12,3 +12,5 @@ class OpenAIAPI:
         except Exception as e:
             print(f"An error occurred: {e}")
             return None
+    def bind_tools(self, tools):
+        return self.llm.bind_tools(tools)
