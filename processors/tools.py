@@ -1,6 +1,12 @@
 from pathlib import Path
 from datetime import datetime
 from langchain_core.tools import tool
+from fpdf import FPDF  
+from core.utils import setup_logging
+import logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 @tool
 def export_notes(notes: str, format: str = "txt") -> str:
@@ -12,7 +18,7 @@ def export_notes(notes: str, format: str = "txt") -> str:
     Returns:
         str: The path to the exported file
     """
-    print("exporting notes")
+    logger.info("Exporting notes")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = Path("output")
     filename = output_dir / f"notes_{timestamp}.{format}"
@@ -24,7 +30,6 @@ def export_notes(notes: str, format: str = "txt") -> str:
     elif format == "mdx":
         filename.write_text(notes)
     elif format == "pdf":
-        from fpdf import FPDF  # Requires `fpdf2` package
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)

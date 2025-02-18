@@ -55,38 +55,10 @@ class GraphNodes:
         self._update_history(state)
         return state
     def should_export(self, state: ChatState):
-        print("Entering should_export with state:", state)
-        
         llm_with_tools = self.openai.bind_tools([export_notes])    
         prompt = state.user_input + "\n\n" + state.notes
         messages = [{"role": "user", "content": prompt}]
-        
-        print("Sending messages to LLM:", messages)
         decision = llm_with_tools.invoke(messages)
-        print("Received decision from LLM:", decision)
-        return {"messages" : decision}
+        result = {"messages" : [decision]}
+        return result
 
-
-
-        # tool_calls = None
-        # if isinstance(decision, dict):
-        #     tool_calls = decision.get("tool_calls") or decision.get("additional_kwargs", {}).get("tool_calls", [])
-        # elif hasattr(decision, "additional_kwargs"):
-        #     tool_calls = decision.additional_kwargs.get("tool_calls", [])
-
-        # print("Extracted tool_calls:", tool_calls)
-
-        # if tool_calls:
-        #     print("Tool calls found:", tool_calls)
-        #     state.tool = tool_calls[0]
-        #     state.action = "tools"
-        # else:
-        #     print("No tool calls found, setting action to respond")
-        #     state.action = "respond"
-        
-        # print("Exiting should_export with state:", state)
-        # return state
-
-   
-    
-    
