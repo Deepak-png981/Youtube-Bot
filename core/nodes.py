@@ -6,6 +6,7 @@ import re
 from history.chat_history import ChatHistory
 from core.openAI import OpenAIAPI
 from processors.tools import export_notes
+from prompts.export_tool import export_tool_prompt
 
 def route_input(state: ChatState) -> str:
     if "youtube.com" in state.user_input:
@@ -50,13 +51,12 @@ class GraphNodes:
         return state
     
     def normal_chat_response(self, state: ChatState) -> ChatState:
-        print("normal_chat_response")
         state.notes = self.generator.generate_response(state.user_input , state.transcript, self.chat_history.get_history())
         self._update_history(state)
         return state
     def should_export(self, state: ChatState):
         llm_with_tools = self.openai.bind_tools([export_notes])    
-        prompt = state.user_input + "\n\n" + state.notes
+        prompt = export_tool_prompt(state.user_input, state.notes , self.chat_history.get_history())
         messages = [{"role": "user", "content": prompt}]
         decision = llm_with_tools.invoke(messages)
         result = {"messages" : [decision]}
