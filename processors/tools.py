@@ -10,7 +10,10 @@ logger = logging.getLogger(__name__)
 
 @tool
 def export_notes(notes: str, format: str = "txt") -> str:
-    """Export notes to a file
+    """Export notes to a file only if the user explicitly requests it.
+    This tool should not be invoked automatically by the LLM.
+    It should only be invoked when the user prompt contains the export request.
+    
     Args:
         notes (str): The notes to export
         format (str): The format to export the notes in
